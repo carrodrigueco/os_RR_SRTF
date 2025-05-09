@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Process Simulation Form</title>
+  <link rel="stylesheet" href="../static/style.css" />
+</head>
+<body>
+  <div class="container">
+    <h1>Process Simulation</h1>
+    <form id="process-form">
+      <div id="processes">
+        <div class="process-box">
+          <p class = "process_name">Process #<span id = "number_process">1</span></p>
+          <label>CPU Time: <input type="number" name="cpu_time" required></label>
+          <label>Process Birth: <input type="number" name="process_birth" required></label>
+        </div>
+      </div>
+      
+      <div class="buttons">
+        <button type="button" onclick="addProcess()">Add New Process</button>
+        <button type="button" onclick="simulate()">Simulate</button>
+      </div>
+
+      <div class="history">
+        <button type="button" onclick="searchHistory()">Search Simulation History</button>
+      </div>
+    </form>
+  </div>
+  
+  <footer><p>Cristina Parra y Carlos Rodriguez</p></footer>
+
+  <script src="../static/script.js">
+  </script>
+</body>
+</html>
