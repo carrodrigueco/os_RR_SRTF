@@ -1,37 +1,64 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="es">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Process Simulation Form</title>
-  <link rel="stylesheet" href="../static/style.css" />
+  <title>Simulador de Procesos</title>
+  <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/static/style.css" />
 </head>
 <body>
   <div class="container">
-    <h1>Process Simulation</h1>
-    <form id="process-form">
-      <div id="processes">
-        <div class="process-box">
-          <p class = "process_name">Process #<span id = "number_process">1</span></p>
-          <label>CPU Time: <input type="number" name="cpu_time" required></label>
-          <label>Process Birth: <input type="number" name="process_birth" required></label>
+    <h1>Simulador de Procesos</h1>
+
+    <div class="input-section">
+      <h2>Configuración de Procesos</h2>
+      <form id="process-form">
+        <div id="processes">
+          <div class="process-box">
+            <p class="process_name">Proceso #<span class="number_process">1</span></p>
+            <label>Tiempo CPU: <input type="number" name="cpu_time" required min="1" value="3"></label>
+            <label>Llegada: <input type="number" name="process_birth" required min="0" value="0"></label>
+            <label class="priority-label">Prioridad: <input type="number" name="priority" value="1" min="0"></label>
+            <button type="button" class="remove-btn" onclick="removeProcess(this)" disabled>Eliminar</button>
+          </div>
+        </div>
+
+        <div class="buttons">
+          <button type="button" onclick="addProcess()">Agregar Proceso</button>
+          <select id="algorithm-select" class="select-algorithm">
+            <option value="RR">Round Robin</option>
+            <option value="STRF">STRF</option>
+          </select>
+          <button type="button" onclick="simulate()">Simular</button>
+        </div>
+      </form>
+    </div>
+
+    <div class="simulation-section">
+      <h2>Visualización de la Simulación</h2>
+      <div id="simulation-area">
+        <svg id="timeline-svg"></svg>
+      </div>
+      <div id="explanation-area">
+        <h3>Explicación Paso a Paso</h3>
+        <div id="explanation-content">
+          <p>Configura los procesos y haz clic en Simular para comenzar.</p>
+        </div>
+        <div class="buttons">
+          <button id="prev-step-button" class="control-button" disabled>Paso Anterior</button>
+          <button id="next-step-button" class="control-button" disabled>Siguiente Paso</button>
         </div>
       </div>
-      
-      <div class="buttons">
-        <button type="button" onclick="addProcess()">Add New Process</button>
-        <button type="button" onclick="simulate()">Simulate</button>
-      </div>
+    </div>
 
-      <div class="history">
-        <button type="button" onclick="searchHistory()">Search Simulation History</button>
-      </div>
-    </form>
+    <div class="history-section">
+      <button type="button" onclick="searchHistory()">Buscar Historial de Simulación</button>
+    </div>
   </div>
-  
+
   <footer><p>Cristina Parra y Carlos Rodriguez</p></footer>
 
-  <script src="../static/script.js">
-  </script>
+  <script src="/static/script.js"></script>
 </body>
 </html>

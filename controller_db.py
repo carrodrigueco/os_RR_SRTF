@@ -1,7 +1,6 @@
+from flask import Flask, jsonify
 import sqlite3
 import os
-from flask import Flask, make_response, jsonify
-
 
 app = Flask(__name__)
 
@@ -9,29 +8,59 @@ app = Flask(__name__)
 def info_get(id_simulation):
     path = 'os_simulation.db'
     try:
-        if not os.path.exist(path):
-            raise Exception("Database doesnt found, please run db.py")
-        id_simulation = int(id_simulation)
+        if not os.path.exists(path):
+            raise Exception("Base de datos no encontrada, por favor ejecute db.py primero")
+        
         con = sqlite3.connect(path)
-        cursor = con.cursor()
+        con.row_factory = sqlite3.Row  # Para acceder a las columnas por nombre
+        cur = con.cursor()
 
-        cursor.execute(f"""
-            SELECT * FROM simulations WHERE id_simulation = {id_simulation} ORDER BY id
-                """)
-
-        values = cursor.fetchall()
-        json = []
-        for i in range(len(values)):
-            key = values[i][0]
-            val = tuple(values[i][1:])
-            json.append({key:values})
+        # Obtener información de la simulación
+        cur.execute("""
+            SELECT DISTINCT id_simulation, 
+                   (SELECT COUNT(*) FROM simulations WHERE id_simulation = ?) as process_count,
+                   (SELECT MAX(time_ends) FROM simulations WHERE id_simulation = ?) as total_time
+            FROM simulations 
+            WHERE id_simulation = ?
+        """, (id_simulation, id_simulation, id_simulation))
+        
+        sim_info = cur.fetchone()
+        if not sim_info:
+            return jsonify({"error": "Simulación no encontrada"}), 404
+        
+        # Obtener detalles de los procesos
+        cur.execute("""
+            SELECT id, cpu_time, process_birth, priority, 
+                   MIN(time_starts) as start_time, 
+                   MAX(time_ends) as end_time
+            FROM simulations 
+            WHERE id_simulation = ?
+            GROUP BY id
+            ORDER BY id
+        """, (id_simulation,))
+        
+        processes = [dict(row) for row in cur.fetchall()]
         con.close()
+
+        return jsonify({
+            "simulation_id": sim_info['id_simulation'],
+            "process_count": sim_info['process_count'],
+            "total_time": sim_info['total_time'],
+            "processes": processes
+        })
+        
     except Exception as e:
         print(e)
-
-    return jsonify(json)
+        return jsonify({"error": str(e)}), 500
 
 @app.post('/api')
 def info_post():
-    return "<h1>API POST</h1>"
+    try:
+        # Esta ruta podría usarse para guardar nuevas simulaciones
+        # pero actualmente se maneja desde app.py
+        return jsonify({"message": "Use /simulate endpoint to create new simulations"}), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
+if __name__ == '__main__':
+    app.run(debug=True)
