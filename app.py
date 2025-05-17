@@ -1,16 +1,22 @@
-from flask import Flask, render_template, request, jsonify, redirect, url_for
+from flask import Flask, render_template, request, jsonify
 from functions import simulador_RR, simulador_STRF
+from model.controller_db import controller
 import sqlite3
-import os
 
 app = Flask(__name__)
+app.register_blueprint(controller, url_prefix = "/api")
 
 @app.route("/")
-def hello_world():
+def index():
     return render_template('index.html')
+
+@app.route("/stadistics")
+def stats():
+    return render_template('stats.html')
 
 @app.route("/simulate", methods=['POST'])
 def simulate():
+
     try:
         data = request.get_json()
         algorithm = data.get('algorithm')
@@ -49,7 +55,7 @@ def simulate():
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
-def save_to_database(algorithm, processes, steps):
+def save_to_database(processes, steps):
     try:
         con = sqlite3.connect("os_simulation.db")
         cur = con.cursor()
@@ -79,14 +85,6 @@ def save_to_database(algorithm, processes, steps):
         con.close()
     except Exception as e:
         print(f"Error al guardar en BD: {e}")
-
-@app.route("/simulation", methods=['GET'])
-def visual():
-    return render_template('simulation.html')
-
-@app.route("/stadistics")
-def stats():
-    return render_template('stats.html')
 
 if __name__ == '__main__':
     app.run(debug=True)
