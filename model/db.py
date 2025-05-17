@@ -2,7 +2,7 @@ import sqlite3
 import os
 
 def creador():
-    con = sqlite3.connect("os_simulation.db")
+    con = sqlite3.connect("model/os_simulation.db")
     cur = con.cursor()
 
     # Eliminar tabla si existe (para desarrollo)
@@ -13,7 +13,7 @@ def creador():
     # Crear tabla de simulaciones
     cur.execute("""
         CREATE TABLE simulations(
-            id_simulation INTEGER NOT NULL AUTO INCREMENT,
+            id_simulation INTEGER NOT NULL,
             type_algorithm INTEGER NOT NULL,
             quamtum_time INTEGER,
             time_ends INTEGER NOT NULL,
@@ -29,8 +29,8 @@ def creador():
             id_simulation INTEGER NOT NULL,
             time_arrive INTEGER NOT NULL,
             time_cpu INTEGER NOT NULL,
-            PRIMARY KEY (id, id_simulation),
-            FOREING KEY (id_simulation) REFERENCES simulations(id_simulation) NOT NULL
+            PRIMARY KEY (id_process, id_simulation),
+            FOREIGN KEY (id_simulation) REFERENCES simulations(id_simulation)
         );
                 """)
 
