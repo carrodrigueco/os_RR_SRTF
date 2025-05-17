@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Simulaciones RR y STRF</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div class="container simulation-section">
+        <h1>Historial de Simulaciones</h1>
+
+        <!-- Simulación 1 -->
+        <div class="simulacion">
+            <h2>Simulación #1</h2>
+
+            <!-- Algoritmo Round Robin -->
+            <div class="algoritmo rr">
+                <h3>Algoritmo: Round Robin</h3>
+                <p><strong>Quantum:</strong> 4</p>
+                
+                <div class="procesos">
+                    <div class="process-box">
+                        <div class="process_name">Proceso A</div>
+                        <label>Arrival Time<input type="number" value="0" disabled></label>
+                        <label>Burst Time<input type="number" value="5" disabled></label>
+                    </div>
+                    <div class="process-box">
+                        <div class="process_name">Proceso B</div>
+                        <label>Arrival Time<input type="number" value="2" disabled></label>
+                        <label>Burst Time<input type="number" value="3" disabled></label>
+                    </div>
+                </div>
+
+                <div class="estadisticas">
+                    <p><strong>Tiempo Promedio:</strong> 6.5</p>
+                    <p><strong>Tiempo Total:</strong> 13</p>
+                </div>
+            </div>
+
+            <!-- Algoritmo STRF -->
+            <div class="algoritmo srtf">
+                <h3>Algoritmo: STRF</h3>
+                
+                <div class="procesos">
+                    <div class="process-box">
+                        <div class="process_name">Proceso A</div>
+                        <label>Arrival Time<input type="number" value="0" disabled></label>
+                        <label>Burst Time<input type="number" value="5" disabled></label>
+                    </div>
+                    <div class="process-box">
+                        <div class="process_name">Proceso B</div>
+                        <label>Arrival Time<input type="number" value="2" disabled></label>
+                        <label>Burst Time<input type="number" value="3" disabled></label>
+                    </div>
+                </div>
+
+                <div class="estadisticas">
+                    <p><strong>Tiempo Promedio:</strong> 5.0</p>
+                    <p><strong>Tiempo Total:</strong> 11</p>
+                </div>
+            </div>
+
+            <!-- Comparativa -->
+            <div class="mejor">
+                <p><strong>Resultado:</strong> STRF fue más eficiente en esta simulación.</p>
+            </div>
+        </div>
+        <!-- Puedes repetir bloques .simulacion para más simulaciones -->
+    </div>
+    <div class="history-section">
+        <!--IGNORAR ERROR DE SINTAXIS DE JAVASCRIPT-->
+      <button type="button" onclick="window.location.href='{{url_for('index')}}'">Volver</button>
+    </div>
+</body>
+</html>
