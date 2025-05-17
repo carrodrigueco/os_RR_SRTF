@@ -13,7 +13,7 @@ def creador():
     # Crear tabla de simulaciones
     cur.execute("""
         CREATE TABLE simulations(
-            id_simulation INTEGER NOT NULL,
+            id_simulation INTEGER NOT NULL AUTO INCREMENT,
             type_algorithm INTEGER NOT NULL,
             quamtum_time INTEGER,
             time_ends INTEGER NOT NULL,
