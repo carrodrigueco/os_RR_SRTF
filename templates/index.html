@@ -13,38 +13,40 @@
 
     <div class="input-section">
       <h2>Configuración de Procesos</h2>
+      <p class="process-limits">Número de procesos: 3 - 20</p>
       <form id="process-form">
         <div id="processes">
           <div class="process-box">
             <p class="process_name">Proceso #<span class="number_process">1</span></p>
             <label>Tiempo CPU: <input type="number" name="cpu_time" required min="1" value="3"></label>
             <label>Llegada: <input type="number" name="process_birth" required min="0" value="0"></label>
-            <!--No hay prioridad en los algoritmos ademas falta el tiempo de ejecucion en CPU de cada uno 
-            <label class="cpu_execution-label">Tiempo en CPU: <input type="number" name="cpu_execution" value="1" min=""></label>
-            -->
-            <label class="priority-label">Prioridad: <input type="number" name="priority" value="1" min="0"></label>
+            <label class="priority-label">Prioridad: <input type="number" name="priority" value="0" min="0"></label>
             <button type="button" class="remove-btn" onclick="removeProcess(this)" disabled>Eliminar</button>
           </div>
         </div>
-
-        <!--No hay eleccion de algoritmo a simulardeben ser ambos algoritmos a la vez-->
+        <div class="quantum-input">
+          <label>QUANTUM para RR: <input type="number" name="quantum" required min="1" max="4" value="1"></label>
+        </div>
         <div class="buttons">
-          <label>QUANTUM para RR: <input type="number" name="quantum" required min="1" value="1" max ="4"></label>
           <button type="button" onclick="addProcess()">Agregar Proceso</button>
-          <select id="algorithm-select" class="select-algorithm">
-            <option value="RR">Round Robin</option>
-            <option value="STRF">STRF</option>
-          </select>
           <button type="button" onclick="simulate()">Simular</button>
         </div>
       </form>
-    </div> 
+    </div>
 
     <div class="simulation-section">
       <h2>Visualización de la Simulación</h2>
-      <div id="simulation-area">
-        <svg id="timeline-svg"></svg>
+      <div class="timelines-container">
+        <div class="timeline-box">
+          <h3>Round Robin (RR)</h3>
+          <svg id="rr-timeline-svg" class="timeline-svg"></svg>
+        </div>
+        <div class="timeline-box">
+          <h3>Shortest Remaining Time First (STRF)</h3>
+          <svg id="strf-timeline-svg" class="timeline-svg"></svg>
+        </div>
       </div>
+
       <div id="explanation-area">
         <h3>Explicación Paso a Paso</h3>
         <div id="explanation-content">

@@ -1,0 +1,31 @@
+format response
+[
+	{
+		"timeline": [(0, 1), (1, 1), (2, 3)],  # (time, process_id)
+        	"end_time": 10,
+        	"average_time": 4.3
+    	},
+	{
+		"timeline": [(0, 1), (1, 1), (2, 3)],  # (time, process_id)
+        	"end_time": 10,
+        	"average_time": 4.3
+    	}
+]
+
+format request
+{
+	"quantum": 122,
+	"processes": 	[
+				{
+					"id_process": 1,
+					"cpu_time": 000,
+					"process_birth": 000
+				},
+				{
+					"id_process": 1,
+					"cpu_time": 000,
+					"process_birth": 000
+				}
+			]
+}
+

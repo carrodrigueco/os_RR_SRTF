@@ -4,6 +4,7 @@ def simulador_RR(processes: list, quantum: int) -> dict:
     queue = [p.copy() for p in sorted(processes, key=lambda p: p['process_birth'])]
     ready_queue = []
     finished = []
+    # Asegúrate de que los diccionarios en 'processes' tengan la clave 'id_process'
     process_arrival = {p['id_process']: p['process_birth'] for p in queue}
     remaining_time = {p['id_process']: p['cpu_time'] for p in queue}
     turnaround_times = {}
@@ -44,6 +45,7 @@ def simulador_STRF(processes: list) -> dict:
     timeline = []
     current_time = 0
     queue = [p.copy() for p in sorted(processes, key=lambda p: p['process_birth'])]
+    # Asegúrate de que los diccionarios en 'processes' tengan la clave 'id_process'
     remaining_time = {p['id_process']: p['cpu_time'] for p in queue}
     process_arrival = {p['id_process']: p['process_birth'] for p in queue}
     finished = set()
@@ -75,3 +77,4 @@ def simulador_STRF(processes: list) -> dict:
         "end_time": current_time,
         "average_time": round(average_time, 2)
     }
+
