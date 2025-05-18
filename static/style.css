@@ -1,9 +1,10 @@
 /* Estilos base y tipografía */
 @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400..900&display=swap'); /* Nueva fuente cibernética */
 
 body {
     margin: 0;
-    font-family: 'Press Start 2P', cursive;
+    font-family: 'Press Start 2P', cursive; /* Fuente principal */
     background-color: #0a0a1a;
     color: #00ffff;
     min-height: 100vh;
@@ -99,7 +100,7 @@ input[type="number"], select {
     border: 1px solid #8a2be2;
     background-color: #1a1a2e;
     color: #00ffff;
-    font-family: 'Press Start 2P', cursive;
+    font-family: 'Press Start 2P', cursive; /* Fuente principal */
     font-size: 0.7em;
     box-shadow: 0 0 5px rgba(138, 43, 226, 0.5);
 }
@@ -126,7 +127,7 @@ button {
     border: none;
     border-radius: 8px;
     cursor: pointer;
-    font-family: 'Press Start 2P', cursive;
+    font-family: 'Press Start 2P', cursive; /* Fuente principal */
     font-size: 0.7em;
     text-transform: uppercase;
     box-shadow: 0 0 10px #8a2be2;
@@ -183,7 +184,7 @@ button:disabled {
 
 .process-node-text {
     fill: #ffffff;
-    font-family: 'Press Start 2P', cursive;
+    font-family: 'Press Start 2P', cursive; /* Fuente principal */
     font-size: 10px;
     text-anchor: middle;
     dominant-baseline: middle;
@@ -191,7 +192,7 @@ button:disabled {
 
 .process-time-text {
     fill: #00ffff;
-    font-family: 'Press Start 2P', cursive;
+    font-family: 'Press Start 2P', cursive; /* Fuente principal */
     font-size: 8px;
     text-anchor: middle;
 }
@@ -208,7 +209,7 @@ button:disabled {
 
 .timeline-label {
     fill: #e9d5ff;
-    font-family: 'Press Start 2P', cursive;
+    font-family: 'Press Start 2P', cursive; /* Fuente principal */
     font-size: 8px;
     text-anchor: middle;
 }
@@ -303,6 +304,7 @@ button:disabled {
 .timeline-label {
     fill: #e9d5ff;
     font-size: 0.8em;
+    font-family: 'Press Start 2P', cursive; /* Fuente principal */
 }
 
 .process-node {
@@ -310,6 +312,12 @@ button:disabled {
     stroke: #00ffff;
     stroke-width: 2px;
     cursor: pointer;
+}
+
+/* Clase para segmentos de proceso completados */
+.process-segment.completed {
+    fill: #4a4a6a; /* Color gris */
+    stroke: #e9d5ff;
 }
 
 .process-node.completed {
@@ -327,6 +335,7 @@ button:disabled {
     font-size: 0.8em;
     text-anchor: middle;
     font-weight: bold;
+    font-family: 'Press Start 2P', cursive; /* Fuente principal */
 }
 
 .process-segment {
@@ -335,15 +344,22 @@ button:disabled {
     stroke-width: 2px;
 }
 
+.process-segment.is-running {
+     fill: #00ff00; /* Color para proceso en ejecución */
+}
+
+
 .process-label {
     fill: #00ffff;
     font-size: 0.8em;
     text-anchor: end;
+    font-family: 'Press Start 2P', cursive; /* Fuente principal */
 }
 
 .process-time-text {
     fill: #e9d5ff;
     font-size: 0.7em;
+    font-family: 'Press Start 2P', cursive; /* Fuente principal */
 }
 
 #explanation-content {
@@ -354,12 +370,54 @@ button:disabled {
     box-shadow: 0 0 10px rgba(0, 255, 255, 0.3);
     margin-top: 15px;
     min-height: 100px;
+    font-family: 'Press Start 2P', cursive; /* Fuente principal */
 }
 
 #explanation-content p {
     margin: 0;
     color: #e9d5ff;
     font-size: 0.9em;
+}
+
+/* Estilos para la información final con fuente cibernética */
+.final-summary {
+    margin-top: 20px;
+    padding-top: 20px;
+    border-top: 1px solid #8a2be2;
+    font-family: 'Orbitron', sans-serif; /* Fuente para resultados finales */
+    text-align: left; /* Alineación a la izquierda para la tabla */
+}
+
+.final-summary h4 {
+    text-align: center; /* Título centrado */
+    font-family: 'Press Start 2P', cursive; /* Mantener fuente del título */
+}
+
+.final-summary table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 15px;
+}
+
+.final-summary th,
+.final-summary td {
+    border: 1px solid #00ffff;
+    padding: 10px;
+    text-align: left;
+}
+
+.final-summary th {
+    background-color: #4a4a6a;
+    color: #00ffff;
+}
+
+.final-summary tr:nth-child(even) {
+    background-color: #3a3a5a;
+}
+
+.final-summary .comparison-result {
+    margin-top: 15px;
+    font-weight: bold;
 }
 
 /* Responsive */
@@ -401,5 +459,10 @@ button:disabled {
 
     .container {
         padding: 15px;
+    }
+
+    .final-summary th,
+    .final-summary td {
+        padding: 5px;
     }
 }

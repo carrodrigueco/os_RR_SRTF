@@ -131,7 +131,8 @@ async function simulate() {
         if (responseData && Array.isArray(responseData.steps) && responseData.steps.length > 0) {
             simulationData = responseData.steps;
             currentStepIndex = 0;
-            displaySimulationStep(currentStepIndex);
+            // Pasar los datos iniciales de procesos para ayudar a determinar si un proceso está terminado
+            displaySimulationStep(currentStepIndex, processesData);
             document.getElementById("prev-step-button").disabled = true;
             document.getElementById("next-step-button").disabled = false;
         } else {
@@ -150,7 +151,8 @@ async function simulate() {
     }
 }
 
-function displaySimulationStep(stepIndex) {
+// Modificar displaySimulationStep para aceptar los datos iniciales de los procesos
+function displaySimulationStep(stepIndex, initialProcesses = []) {
     if (!simulationData || stepIndex < 0 || stepIndex >= simulationData.length) {
         console.error("Índice de paso inválido o sin datos de simulación.");
         return;
@@ -165,8 +167,74 @@ function displaySimulationStep(stepIndex) {
         return;
     }
 
-    renderTimeline('Round Robin', step.rr_data, 'rr-timeline-svg', step.currentTime);
-    renderTimeline('STRF', step.strf_data, 'strf-timeline-svg', step.currentTime);
+    // Determinar procesos completados en este paso para RR y STRF
+    const completedRR = new Set();
+    const completedSTRF = new Set();
+
+    // Acceder a remaining_times_history para el estado al inicio de este paso
+    const rrRemaining = step.rr_data.remaining_times_history ? step.rr_data.remaining_times_history[step.currentTime] : {};
+    const strfRemaining = step.strf_data.remaining_times_history ? step.strf_data.remaining_times_history[step.currentTime] : {};
+
+    // También podemos verificar el estado después de ejecutar en este paso si hay un proceso
+    const rrProcess = step.rr_data.process;
+    const strfProcess = step.strf_data.process;
+
+     // Una forma más fiable es comprobar los remaining_times_history en el siguiente paso si existe,
+     // o si estamos en el último paso, ver el estado final en el último remaining_times_history entry.
+    const nextStep = simulationData[stepIndex + 1];
+    let rrRemainingAfterStep = null;
+    let strfRemainingAfterStep = null;
+
+    if (nextStep && nextStep.rr_data.remaining_times_history && nextStep.rr_data.remaining_times_history[nextStep.currentTime]) {
+         rrRemainingAfterStep = nextStep.rr_data.remaining_times_history[nextStep.currentTime];
+    } else if (stepIndex === simulationData.length - 1 && step.rr_data.remaining_times_history) {
+         const lastTime = Math.max(...Object.keys(step.rr_data.remaining_times_history).map(Number));
+         if (step.currentTime >= lastTime) { // Asegurarse de que estamos en o después del último estado registrado
+             rrRemainingAfterStep = step.rr_data.remaining_times_history[lastTime];
+         }
+    }
+
+     if (nextStep && nextStep.strf_data.remaining_times_history && nextStep.strf_data.remaining_times_history[nextStep.currentTime]) {
+         strfRemainingAfterStep = nextStep.strf_data.remaining_times_history[nextStep.currentTime];
+    } else if (stepIndex === simulationData.length - 1 && step.strf_data.remaining_times_history) {
+        const lastTime = Math.max(...Object.keys(step.strf_data.remaining_times_history).map(Number));
+         if (step.currentTime >= lastTime) { // Asegurarse de que estamos en o después del último estado registrado
+             strfRemainingAfterStep = step.strf_data.remaining_times_history[lastTime];
+         }
+    }
+
+
+    if (rrRemainingAfterStep) {
+         for (const pid in rrRemainingAfterStep) {
+             if (rrRemainingAfterStep[pid] <= 0) {
+                 completedRR.add(parseInt(pid));
+             }
+         }
+    } else { // Fallback si no hay remaining_times_history después del paso (ej. paso final)
+         // Intentar inferir de timeline y el estado ANTES del paso si no hay estado DESPUES
+         const currentRRTimeline = step.rr_data.timeline.filter(item => item[0] === step.currentTime);
+         if (currentRRTimeline.length > 0 && rrRemaining && rrRemaining[rrProcess] !== undefined && rrRemaining[rrProcess] <= 1) {
+             completedRR.add(rrProcess);
+         }
+    }
+
+    if (strfRemainingAfterStep) {
+         for (const pid in strfRemainingAfterStep) {
+             if (strfRemainingAfterStep[pid] <= 0) {
+                 completedSTRF.add(parseInt(pid));
+             }
+         }
+    } else { // Fallback
+         const currentSTRFTimeline = step.strf_data.timeline.filter(item => item[0] === step.currentTime);
+          if (currentSTRFTimeline.length > 0 && strfRemaining && strfRemaining[strfProcess] !== undefined && strfRemaining[strfProcess] <= 1) {
+             completedSTRF.add(strfProcess);
+          }
+    }
+
+
+    // Pasar conjuntos de procesos completados a renderTimeline
+    renderTimeline('Round Robin', step.rr_data, 'rr-timeline-svg', step.currentTime, completedRR);
+    renderTimeline('STRF', step.strf_data, 'strf-timeline-svg', step.currentTime, completedSTRF);
 
     const explanationContent = document.getElementById("explanation-content");
 
@@ -195,18 +263,27 @@ function displaySimulationStep(stepIndex) {
         explanationHTML += `
             <div class="final-summary">
                 <h4>Resultados Finales de la Simulación</h4>
-                <div class="algorithm-results">
-                    <div class="rr-results">
-                        <h5>Round Robin (RR):</h5>
-                        <p>Tiempo Promedio: <strong>${rr_results.average_time !== undefined ? rr_results.average_time : 'N/A'}</strong> unidades</p>
-                        <p>Tiempo Total: <strong>${rr_results.end_time !== undefined ? rr_results.end_time : 'N/A'}</strong> unidades</p>
-                    </div>
-                    <div class="strf-results">
-                        <h5>STRF:</h5>
-                        <p>Tiempo Promedio: <strong>${strf_results.average_time !== undefined ? strf_results.average_time : 'N/A'}</strong> unidades</p>
-                        <p>Tiempo Total: <strong>${strf_results.end_time !== undefined ? strf_results.end_time : 'N/A'}</strong> unidades</p>
-                    </div>
-                </div>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Algoritmo</th>
+                            <th>Tiempo Promedio</th>
+                            <th>Tiempo Total</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Round Robin (RR)</td>
+                            <td>${rr_results.average_time !== undefined ? rr_results.average_time : 'N/A'} unidades</td>
+                            <td>${rr_results.end_time !== undefined ? rr_results.end_time : 'N/A'} unidades</td>
+                        </tr>
+                        <tr>
+                            <td>STRF</td>
+                            <td>${strf_results.average_time !== undefined ? strf_results.average_time : 'N/A'} unidades</td>
+                            <td>${strf_results.end_time !== undefined ? strf_results.end_time : 'N/A'} unidades</td>
+                        </tr>
+                    </tbody>
+                </table>
                 <div class="comparison-result">
                     <h5>Conclusión:</h5>
                     <p>${comparison || 'No hay resultado de comparación disponible.'}</p>
@@ -221,7 +298,8 @@ function displaySimulationStep(stepIndex) {
     document.getElementById("next-step-button").disabled = stepIndex === simulationData.length - 1;
 }
 
-function renderTimeline(algorithmName, stepAlgorithmData, svgId, currentTime) {
+// Modificar renderTimeline para aceptar el conjunto de procesos completados
+function renderTimeline(algorithmName, stepAlgorithmData, svgId, currentTime, completedProcesses = new Set()) {
     const svg = document.getElementById(svgId);
     svg.innerHTML = '';
 
@@ -232,10 +310,13 @@ function renderTimeline(algorithmName, stepAlgorithmData, svgId, currentTime) {
     const drawingHeight = svgHeight - margin.top - margin.bottom;
 
     const timeline = stepAlgorithmData && stepAlgorithmData.timeline ? stepAlgorithmData.timeline : [];
-    const maxTime = Math.max(currentTime + 5, 10);
+    const maxTime = Math.max(currentTime + 5, 10); // Asegurar que la línea de tiempo tenga un tamaño mínimo
     const xScale = (time) => margin.left + (time / maxTime) * drawingWidth;
 
+    // Obtener IDs de procesos presentes en la línea de tiempo actual y ordenarlos
     const processIdsInStep = [...new Set(timeline.map(([time, processId]) => processId))].sort((a, b) => a - b);
+    // Incluir procesos que existen pero no han llegado aún, si es necesario visualizarlos.
+    // Por ahora, solo incluiremos los que están en la timeline del paso actual.
     const numberOfProcessesToShow = processIdsInStep.length > 0 ? processIdsInStep.length : 1;
 
     const processIdToIndex = {};
@@ -247,35 +328,38 @@ function renderTimeline(algorithmName, stepAlgorithmData, svgId, currentTime) {
         return margin.top + (processIndex + 0.5) * (drawingHeight / numberOfProcessesToShow);
     }
 
+    // Dibujar línea principal de la línea de tiempo
     const timelineLine = document.createElementNS("http://www.w3.org/2000/svg", "line");
     timelineLine.setAttribute("x1", xScale(0));
-    timelineLine.setAttribute("y1", margin.top + drawingHeight / 2);
+    timelineLine.setAttribute("y1", margin.top + drawingHeight / 2); // Centrar verticalmente si hay procesos
     timelineLine.setAttribute("x2", xScale(maxTime));
-    timelineLine.setAttribute("y2", margin.top + drawingHeight / 2);
+    timelineLine.setAttribute("y2", margin.top + drawingHeight / 2); // Centrar verticalmente si hay procesos
     timelineLine.classList.add("timeline-line");
     svg.appendChild(timelineLine);
 
+    // Dibujar marcas y etiquetas de tiempo
     for (let i = 0; i <= maxTime; i++) {
         const xPos = xScale(i);
 
         const tick = document.createElementNS("http://www.w3.org/2000/svg", "line");
         tick.setAttribute("x1", xPos);
-        tick.setAttribute("y1", margin.top + drawingHeight / 2 - 5);
+        tick.setAttribute("y1", margin.top + drawingHeight / 2 - 5); // Ajustar posición del tick
         tick.setAttribute("x2", xPos);
-        tick.setAttribute("y2", margin.top + drawingHeight / 2 + 5);
+        tick.setAttribute("y2", margin.top + drawingHeight / 2 + 5); // Ajustar posición del tick
         tick.classList.add("timeline-tick");
         svg.appendChild(tick);
 
         if (i % 2 === 0 || i === currentTime || i === maxTime) {
             const label = document.createElementNS("http://www.w3.org/2000/svg", "text");
             label.setAttribute("x", xPos);
-            label.setAttribute("y", margin.top + drawingHeight / 2 + 25);
+            label.setAttribute("y", margin.top + drawingHeight / 2 + 25); // Ajustar posición de la etiqueta
             label.textContent = i;
             label.classList.add("timeline-label");
             svg.appendChild(label);
         }
     }
 
+    // Agrupar segmentos de línea de tiempo por proceso
     const processSegments = {};
     timeline.forEach(([time, processId]) => {
         if (!processSegments[processId]) {
@@ -284,11 +368,14 @@ function renderTimeline(algorithmName, stepAlgorithmData, svgId, currentTime) {
         processSegments[processId].push(time);
     });
 
+    // Dibujar segmentos de procesos y etiquetas
     Object.entries(processSegments).forEach(([processIdStr, times]) => {
         const processId = parseInt(processIdStr);
+         // Solo dibujar si el proceso está en la lista de IDs a mostrar en este paso
         if (processIdsInStep.includes(processId)) {
             const yPos = yScale(processId);
 
+            // Etiqueta del proceso
             const processLabel = document.createElementNS("http://www.w3.org/2000/svg", "text");
             processLabel.setAttribute("x", margin.left - 10);
             processLabel.setAttribute("y", yPos);
@@ -300,72 +387,85 @@ function renderTimeline(algorithmName, stepAlgorithmData, svgId, currentTime) {
 
             times.sort((a, b) => a - b);
 
+            // Dibujar segmentos continuos de ejecución
             let segmentStart = times[0];
             for (let i = 1; i < times.length; i++) {
                 if (times[i] !== times[i-1] + 1) {
                     const segment = document.createElementNS("http://www.w3.org/2000/svg", "rect");
                     segment.setAttribute("x", xScale(segmentStart));
-                    segment.setAttribute("y", yPos - 10);
+                    segment.setAttribute("y", yPos - 10); // Altura del segmento
                     segment.setAttribute("width", xScale(times[i-1] + 1) - xScale(segmentStart));
-                    segment.setAttribute("height", 20);
+                    segment.setAttribute("height", 20); // Altura del segmento
                     segment.classList.add("process-segment");
-                    if (currentTime >= segmentStart && currentTime < times[i-1] + 1) {
+                     // Marcar como completado si el proceso terminó en este paso
+                    if (completedProcesses.has(processId) && times[i-1] === currentTime) {
+                         segment.classList.add("completed");
+                    } else if (stepAlgorithmData.process === processId && times[i-1] === currentTime) {
                         segment.classList.add("is-running");
                     }
                     svg.appendChild(segment);
                     segmentStart = times[i];
                 }
             }
+            // Dibujar el último segmento continuo
             const segment = document.createElementNS("http://www.w3.org/2000/svg", "rect");
             segment.setAttribute("x", xScale(segmentStart));
-            segment.setAttribute("y", yPos - 10);
+            segment.setAttribute("y", yPos - 10); // Altura del segmento
             segment.setAttribute("width", xScale(times[times.length - 1] + 1) - xScale(segmentStart));
-            segment.setAttribute("height", 20);
+            segment.setAttribute("height", 20); // Altura del segmento
             segment.classList.add("process-segment");
-            if (currentTime >= segmentStart && currentTime < times[times.length - 1] + 1) {
+             // Marcar como completado si el proceso terminó en este paso
+            if (completedProcesses.has(processId) && times[times.length - 1] === currentTime) {
+                 segment.classList.add("completed");
+            } else if (stepAlgorithmData.process === processId && times[times.length - 1] === currentTime) {
                 segment.classList.add("is-running");
             }
             svg.appendChild(segment);
 
+            // Indicador de proceso actual (si aplica a este paso y algoritmo)
             if (stepAlgorithmData.process === processId) {
                 const currentNode = document.createElementNS("http://www.w3.org/2000/svg", "circle");
                 currentNode.setAttribute("cx", xScale(currentTime + 0.5));
                 currentNode.setAttribute("cy", yPos);
                 currentNode.setAttribute("r", 8);
                 currentNode.classList.add("current-process-indicator");
+                 // Añadir un estilo para el indicador del proceso en ejecución si es necesario
                 svg.appendChild(currentNode);
             }
         }
     });
 
+    // Línea indicadora del tiempo actual
     const currentTimeLine = document.createElementNS("http://www.w3.org/2000/svg", "line");
     currentTimeLine.setAttribute("x1", xScale(currentTime + 0.5));
     currentTimeLine.setAttribute("y1", margin.top);
     currentTimeLine.setAttribute("x2", xScale(currentTime + 0.5));
-    currentTimeLine.setAttribute("y2", margin.top + drawingHeight);
+    currentTimeLine.setAttribute("y2", svgHeight - margin.bottom); // Extender hasta el final del área de dibujo
     currentTimeLine.classList.add("current-time-line");
     svg.appendChild(currentTimeLine);
 
+    // Título del algoritmo
     const algoTitle = document.createElementNS("http://www.w3.org/2000/svg", "text");
     algoTitle.setAttribute("x", svgWidth / 2);
     algoTitle.setAttribute("y", 20);
     algoTitle.textContent = algorithmName;
-    algoTitle.classList.add("algorithm-title");
+    algoTitle.classList.add("algorithm-title"); // Asegúrate de tener estilos para .algorithm-title en tu CSS
     algoTitle.setAttribute("text-anchor", "middle");
     svg.appendChild(algoTitle);
 }
 
+
 function nextStep() {
     if (currentStepIndex < simulationData.length - 1) {
         currentStepIndex++;
-        displaySimulationStep(currentStepIndex);
+        displaySimulationStep(currentStepIndex); // No necesitamos pasar processesData aquí nuevamente
     }
 }
 
 function prevStep() {
     if (currentStepIndex > 0) {
         currentStepIndex--;
-        displaySimulationStep(currentStepIndex);
+        displaySimulationStep(currentStepIndex); // No necesitamos pasar processesData aquí nuevamente
     }
 }
 
@@ -385,6 +485,6 @@ window.onload = () => {
 
 window.addEventListener('resize', () => {
     if (simulationData && simulationData.length > 0) {
-        displaySimulationStep(currentStepIndex);
+        displaySimulationStep(currentStepIndex); // Al redimensionar, refrescar la visualización con los datos actuales
     }
 });
